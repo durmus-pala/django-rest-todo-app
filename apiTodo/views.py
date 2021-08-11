@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.generics import get_object_or_404
+from .pagination import SmallPagination, LargePagination
 
 
 from .models import Todo
@@ -19,8 +20,20 @@ def home(request):
 
 
 class TodoListCreateAPIView(generics.ListCreateAPIView):
-    queryset = Todo.objects.all()
+    queryset = Todo.objects.all().order_by('-id')
     serializer_class = TodoSerializer
+    pagination_class = SmallPagination
+
+    def get_queryset(self):
+        """
+        Optionally restricts the returned purchases to a given user,
+        by filtering against a `username` query parameter in the URL.
+        """
+        queryset = Todo.objects.all()
+        done = self.request.query_params.get('done')
+        if done is not None:
+            queryset = queryset.filter(done=done)
+        return queryset
 
 
 class ToDoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
